@@ -1,0 +1,401 @@
+<html> 
+    <head> 
+        <title> 
+            一起来丸贪食蛇呀 
+        </title> 
+    </head> 
+ 
+    <body> 
+        <div> 
+        <p> 
+            <aligen cneter><font size=5><strong><font color=red>贪</font><font color=yellow>食</font><font color=blue>蛇</font></strong></font></cneter> 
+        </p> 
+        <p> 
+            按<strong>空格键Space</strong>开始或暂停游戏 
+        </p> 
+        <p> 
+            按<strong>WASD</strong>或<strong>小键盘↑↓←→</strong>操纵方向 
+        </p> 
+        <p><span id="loginname"></span>积分：<span id="count"></span></p> 
+        <br> 
+        <p> 
+            管你看没看懂，玩就对了！ 
+        </p> 
+        <div id="map" style="background-color:#000000; width: 400px; height: 300px; position: absolute;"></div> 
+        <br> 
+        <div id="key" style="margin-top: 300px; margin-left: 130px; position: absolute;"> 
+            <table id="loginkey"> 
+                <tr align="center">
+                    <td>
+                        帐号：<input type="text" id="name" style="width:100px;height:20px;font-size:13px;" placeholder="请输入帐号"/>
+                    </td>
+                </tr>
+                <tr align="center">
+                    <td>
+                        密码：<input type="password" id="passwd" style="width:100px;height:20px;font-size:13px;" placeholder="请输入密码"/>
+                    </td>
+                    </tr>
+                <tr align="center"> 
+                    <td> 
+                        <input type="button" id="loginbutton" value="登录" onclick="user.login();" /> 
+                    </td> 
+                    <td> 
+                        <input type="button" id="registerbutton" value="注册" onclick="user.register();" /> 
+                    </td> 
+                </tr> 
+            </table> 
+            <table id="logoutkey" style="display: none;">
+                <tr align="center"> 
+                    <td> 
+                        <input type="button" id="logoutbutton" value="退出" onclick="user.logout();" /> 
+                    </td> 
+                    <td> 
+                        <input type="button" id="rankbutton" value="排行榜" onclick="rank.showRecord();" /> 
+                    </td> 
+                </tr>
+            </table>
+        </div> 
+        <div>
+    </body> 
+</html> 
+ 
+<script> 
+ 
+var count = -1; 
+var lastdirection = ['right','left'];     //防止后退 
+var login = false; 
+var username = ""; 
+var bodyshape;
+var foodshape;
+var snake = new snake(); 
+var food = new food(); 
+var rank = new rank(); 
+var user = new user(); 
+var timer; 
+ 
+window.onload = function(){ 
+    snake.display(); 
+    food.display(); 
+    var pcount = 0; 
+    document.onkeydown = function(event){ 
+        var code; 
+        code = event.keyCode; 
+        if(code == 32){ 
+            if(pcount == 0){ 
+                if(login == false){
+                    alert("请先登陆！");
+                    return;
+                }
+                pcount = 1; 
+                timer = setInterval('snake.move()', 150); 
+            }else{ 
+                pcount = 0; 
+                alert("游戏暂停！") 
+            } 
+        } 
+        if(code == 13){
+            user.login();
+        }
+        snake.setKey(code); 
+    } 
+} 
+ 
+function init(){
+    //去掉旧食物
+    foodshape = document.createElement("div"); 
+    foodshape.style.width = 10 + "px"; 
+    foodshape.style.height = 10 + "px"; 
+    foodshape.style.backgroundColor = "#000000" 
+    foodshape.style.position = "absolute"; 
+    foodshape.style.left = food.x * 10 + "px"; 
+    foodshape.style.top = food.y * 10 + "px"; 
+    document.getElementById("map").appendChild(foodshape); 
+
+    //去掉旧蛇
+    for(var i = 1; i < snake.body.length; i++){  
+        bodyshape = document.createElement("div"); 
+        bodyshape.style.width = 10 + "px"; 
+        bodyshape.style.height = 10 + "px"; 
+        bodyshape.style.backgroundColor = "#000000"; 
+        bodyshape.style.position = "absolute"; 
+        bodyshape.style.left = snake.body[i][0] * 10 + "px"; 
+        bodyshape.style.top = snake.body[i][1] * 10 + "px"; 
+        document.getElementById("map").appendChild(bodyshape); 
+    }
+
+    clearTimeout(timer);
+
+    count = -1;
+    snake.body = [ [3, 2, '#ffffff'], [2, 2, '#ffffff'], [1, 2, '#ffffff'], [0, 2, '#000000']]; 
+    snake.direction = 'right';
+    snake.display(); 
+    food.display(); 
+    var pcount = 0; 
+    document.onkeydown = function(event){ 
+        var code; 
+        code = event.keyCode; 
+        if(code == 32){ 
+            if(pcount == 0){ 
+                if(login == false){
+                    alert("请先登陆！");
+                    return;
+                }
+                pcount = 1; 
+                timer = setInterval('snake.move()', 150); 
+            }else{ 
+                pcount = 0; 
+                alert("游戏暂停！") 
+            } 
+        } 
+        if(code == 13){
+            user.login();
+        }
+        snake.setKey(code); 
+    } 
+}
+
+function snake(){ 
+    this.body = [ [3, 2, '#ffffff'], [2, 2, '#ffffff'], [1, 2, '#ffffff'], [0, 2, '#000000']]; 
+    this.display = function(){ 
+        for(var i = 0; i < this.body.length; i++){  
+            bodyshape = document.createElement("div"); 
+            bodyshape.style.width = 10 + "px"; 
+            bodyshape.style.height = 10 + "px"; 
+            bodyshape.style.backgroundColor = this.body[i][2]; 
+            bodyshape.style.position = "absolute"; 
+            bodyshape.style.left = this.body[i][0] * 10 + "px"; 
+            bodyshape.style.top = this.body[i][1] * 10 + "px"; 
+            document.getElementById("map").appendChild(bodyshape); 
+        } 
+    } 
+ 
+    this.setKey = function(code){ 
+        switch(code){ 
+            case 37: 
+                this.direction = 'left'; 
+                break; 
+             
+            case 38: 
+                this.direction = 'top'; 
+                break; 
+ 
+            case 39: 
+                this.direction = 'right'; 
+                break; 
+ 
+            case 40: 
+                this.direction = 'bottom'; 
+                break; 
+ 
+            case 65: 
+                this.direction = 'left'; 
+                break; 
+                 
+            case 87: 
+                this.direction = 'top'; 
+                break; 
+                 
+            case 68: 
+                this.direction = 'right'; 
+                break; 
+                 
+            case 83: 
+                this.direction = 'bottom'; 
+                break; 
+ 
+            default: 
+                break; 
+ 
+        } 
+    } 
+ 
+    this.direction = 'right'; 
+ 
+    this.move = function(){ 
+        if(this.direction == lastdirection[1]){ 
+            this.direction = lastdirection[0]; 
+        } 
+        for(var i = this.body.length - 1; i > 0; i--){ 
+            this.body[i][0] = this.body[i - 1][0]; 
+            this.body[i][1] = this.body[i - 1][1]; 
+        } 
+ 
+        switch(this.direction){ 
+            case 'left': 
+                this.body[0][0] = this.body[0][0] - 1; 
+                lastdirection = ['left','right']; 
+                break; 
+ 
+            case 'top': 
+                this.body[0][1] = this.body[0][1] - 1; 
+                lastdirection = ['top','bottom']; 
+                break; 
+ 
+            case 'right': 
+                this.body[0][0] = this.body[0][0] + 1; 
+                lastdirection = ['right','left']; 
+                break; 
+ 
+            case 'bottom': 
+                this.body[0][1] = this.body[0][1] + 1; 
+                lastdirection = ['bottom','top']; 
+                break; 
+        } 
+ 
+        //吃到食物 
+        if(this.body[0][0] == food.x && this.body[0][1] == food.y){ 
+            var x = this.body[this.body.length - 1][0]; 
+            var y = this.body[this.body.length - 1][1]; 
+            this.body.push([x, y, '#000000']); 
+            this.body[this.body.length - 2][2] = "#ffffff"; 
+            food.display(); 
+        } 
+        //碰壁 
+        if(this.body[0][0] == 40 || this.body[0][0] == -1 || this.body[0][1] == -1 || this.body[0][1] == 30){ 
+            alert("你撞啥壁？"+username+"才"+count+"分！"); 
+            rank.addRecord(username,count);
+            init(); 
+        } 
+        //恰到自己 
+        for(var i = 1; i < this.body.length - 1; i++){ 
+            if(this.body[0][0] == this.body[i][0] && this.body[0][1] == this.body[i][1]){ 
+                alert("饿到恰自己了吗？你"+username+"才得了"+count+"分啊！"); 
+                rank.addRecord(username,count);
+                init(); 
+            } 
+        } 
+        this.display(); 
+    } 
+} 
+ 
+function food(){ 
+    this.x = null; 
+    this.y = null; 
+ 
+    this.display = function(){ 
+        count++; 
+        document.getElementById("count").innerHTML = count.toString(); 
+ 
+        //判断食物位置 
+        tempx = Math.floor(Math.random() * 39); 
+        tempy = Math.floor(Math.random() * 29); 
+        var i = 0; 
+        while(i < snake.body.length - 1){ 
+            if(snake.body[i][0] == tempx && snake.body[i][1] == tempy){ 
+                tempx = Math.floor(Math.random() * 39); 
+                tempy = Math.floor(Math.random() * 29); 
+                i = 0; 
+                countine; 
+            } 
+            i++; 
+        } 
+        this.x = tempx; 
+        this.y = tempy; 
+         
+        foodshape = document.createElement("div"); 
+        foodshape.style.width = 10 + "px"; 
+        foodshape.style.height = 10 + "px"; 
+        foodshape.style.backgroundColor = "#029c5b" 
+        foodshape.style.position = "absolute"; 
+        foodshape.style.left = this.x * 10 + "px"; 
+        foodshape.style.top = this.y * 10 + "px"; 
+        document.getElementById("map").appendChild(foodshape); 
+    } 
+} 
+ 
+function rank(){ 
+    this.ranklist = [ ['admin',2] ];
+    
+    this.addRecord = function(name,point){
+        for(var i = 0; i < this.ranklist.length; i++){
+            if(this.ranklist[i][0] == name){
+                if(this.ranklist[i][1] < point){
+                    this.ranklist[i][1] = point;
+                }
+                return;
+            }
+        }
+        this.ranklist.push([name,point]);
+        for(var i = this.ranklist.length - 1; i > 0; i--){
+            if(this.ranklist[i][1] > this.ranklist[i-1][1]){
+                var temp = this.ranklist[i-1];
+                this.ranklist[i-1] = this.ranklist[i];
+                this.ranklist[i] = temp;
+            }
+        }
+    }
+
+    this.showRecord = function(){
+        var record = "前五排行榜\n";
+        num = 1;
+        for(var i in this.ranklist){
+            record = record + num + ". " + this.ranklist[i][0] + " 等分：" + this.ranklist[i][1] + "\n";
+            if(num >= 5){
+                break;
+            }
+            num++;
+        }
+        alert(record);
+    }
+} 
+ 
+function user(){ 
+    this.userlist = [ ['admin','admin'], ['root','root']]; 
+ 
+    this.register = function(){ 
+        var name = document.getElementById("name").value;
+        var passwd = document.getElementById("passwd").value;
+        if(name == "" || passwd == ""){
+            alert("账号密码不能为空！");
+            return;
+        }
+        for(var i = 0; i < this.userlist.length; i++){
+            if(this.userlist[i][0] == name){
+                alert("已存在该用户！");
+                return;
+            }
+        }
+        this.userlist.push([name,passwd]); 
+        alert("注册成功！"); 
+    } 
+ 
+    this.login = function(){ 
+        var name = document.getElementById("name").value;
+        var passwd = document.getElementById("passwd").value;
+        userc = 0; 
+        if(name == "" || passwd == ""){
+            alert("账号密码不能为空！");
+            return;
+        }
+        for(var i = 0; i < this.userlist.length; i++){ 
+            if(name == this.userlist[i][0]){ 
+                userc++; 
+                if(passwd == this.userlist[i][1]){ 
+                    login = true; 
+                    username = name;
+                    document.getElementById("loginname").innerText = name;
+                    document.getElementById("loginkey").style.display = "none";
+                    document.getElementById("logoutkey").style.display = "block";
+                    alert("登录成功！"); 
+                }else{ 
+                    alert("密码错误！"); 
+                } 
+            } 
+        } 
+        if(userc == 0){ 
+            alert("没有该用户！"); 
+        } 
+    } 
+    
+    this.logout = function(){
+        login = false;
+        username = "";
+        document.getElementById("loginname").innerText = "";
+        document.getElementById("loginkey").style.display = "block";
+        document.getElementById("logoutkey").style.display = "none";
+        alert("登出成功！");
+        init();
+    }
+} 
+
+</script>
